@@ -1,0 +1,28 @@
+@startuml
+title Задача 5.1 — проверочные сценарии чтения (A4)
+left to right direction
+skinparam shadowing false
+
+actor "Наблюдатель модели\n(предположение A4)" as Observer
+
+rectangle "Модель файловой системы диска" {
+  usecase "UC1. Найти кластер\nпо номеру" as FindCluster
+  usecase "UC2. Просмотреть\nсодержимое папки" as ListEntries
+  usecase "UC3. Прочитать\nданные файла" as ReadFile
+}
+
+Observer --> FindCluster
+Observer --> ListEntries
+Observer --> ReadFile
+
+note bottom of Observer
+  Исходный текст задаёт только структуру.
+  Актор и цели — допущение для проверки покрытия,
+  а не дополнительные требования пользователя.
+end note
+
+note bottom of ReadFile
+  Выбор файла из папки — предусловие UC3.
+  Он не навязывает include/extend между сценариями.
+end note
+@enduml

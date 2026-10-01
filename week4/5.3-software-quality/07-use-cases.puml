@@ -1,0 +1,25 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+title Задача 5.3 — составление и просмотр схемы качества (допущение D1)
+actor "Специалист по качеству" as Specialist
+rectangle "Схема оценки качества ПС" {
+  usecase "UC1\nНастроить метрики\nкритерия на этапе" as UC1
+  usecase "UC2\nЗадать критерии\nфактора на этапе" as UC2
+  usecase "UC3\nПросмотреть схему\nвыбранного этапа" as UC3
+  usecase "UC4\nСопоставить схемы\nанализа и реализации" as UC4
+}
+Specialist -- UC1
+Specialist -- UC2
+Specialist -- UC3
+Specialist -- UC4
+note bottom of Specialist
+  Актор и действия — проектное дополнение D1.
+  Исходное условие задаёт структуру данных.
+end note
+note bottom of UC3
+  Показываются определения критериев и метрик.
+  Формулы и результаты измерений не заданы.
+end note
+@enduml

@@ -1,0 +1,58 @@
+@startuml
+title Задача 5.3 — черновик классов (этап 6)
+!pragma layout smetana
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName SansSerif
+skinparam classBackgroundColor #F5F9FD
+skinparam classBorderColor #335A7A
+top to bottom direction
+
+class "Фактор" as Factor {
+  +name: String {readOnly}
+}
+class "Критерий" as Criterion {
+  +name: String {readOnly}
+}
+class "Метрика" as Metric {
+  +name: String {readOnly}
+}
+class "ЭтапРазработки" as DevelopmentStage {
+  +name: String {readOnly}
+  +configureCriterion(criterion: Criterion, metrics: Set<Metric>): CriterionAtStage
+  +describeFactor(factor: Factor, settings: Set<CriterionAtStage>): FactorAtStage
+  +factors(): Set<FactorAtStage>
+}
+class "ОписаниеФактораНаЭтапе" as FactorAtStage {
+  +setCriteria(settings: Set<CriterionAtStage>): void
+  +criteria(): Set<Criterion>
+}
+class "НастройкаКритерияНаЭтапе" as CriterionAtStage {
+  +setMetrics(metrics: Set<Metric>): void
+  +metrics(): Set<Metric>
+}
+
+Factor "factor\n1" -- "descriptions\n0..*" FactorAtStage : описывается
+DevelopmentStage "stage\n1" -- "factorDescriptions\n0..*" FactorAtStage : задаёт контекст описания
+Criterion "criterion\n1" -- "settings\n0..*" CriterionAtStage : настраивается
+DevelopmentStage "stage\n1" -- "criterionSettings\n0..*" CriterionAtStage : задаёт контекст настройки
+FactorAtStage "factorDescriptions\n0..*" -- "criterionSettings\n1..*" CriterionAtStage : включает
+CriterionAtStage "usages\n0..*" -- "metrics\n2..*" Metric : использует
+
+note bottom of FactorAtStage
+  Уникальная пара (factor, stage).
+  Этап каждой настройки совпадает с этапом описания.
+end note
+note bottom of CriterionAtStage
+  Уникальная пара (criterion, stage).
+  Все многозначные роли — множества.
+end note
+legend left
+  name — только чтение. Ссылки хранятся в именованных ролях связей.
+  Операции составления и просмотра — допущение D1.
+  Нижние границы наборов: D2; незадействованные элементы: D6.
+  Контракты и полнота готовой схемы: 05-relations.md.
+endlegend
+@enduml

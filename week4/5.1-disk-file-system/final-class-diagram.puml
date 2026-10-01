@@ -1,0 +1,44 @@
+@startuml
+title Задача 5.1 — UML-диаграмма классов методом Аббота
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+class "Диск" as Disk <<Entity>> {
+  + findCluster(number: Integer): Cluster[0..1]
+  + listFolders(): Folder[*]
+}
+class "Кластер" as Cluster <<Entity>> {
+  number: Integer
+  content: ByteSequence
+  + readContent(): ByteSequence
+}
+class "Папка" as Folder <<Entity>> {
+  name: String
+  + listEntries(): (Folder | File)[*]
+}
+class "Файл" as File <<Entity>> {
+  name: String
+  + readData(): ByteSequence
+}
+
+Disk "1\ndisk" *-- "1..*\nclusters" Cluster : состоит из
+Disk "1\ndisk" -- "0..*\nfolders" Folder : размещает
+Folder "0..1\nparent" -- "0..*\nsubfolders" Folder : содержит подпапки
+Folder "1\nfolder" -- "0..*\nfiles" File : содержит файлы
+Folder "0..1\nindexOwner" -- "1\nindexCluster" Cluster : размещает список
+File "0..1\nfileOwner" -- "2..*\ndataClusters" Cluster : размещает данные\n{ordered, unique}
+
+legend bottom
+  R1–R4: исходные требования. «Несколько кластеров» буквально = 2..*.
+  A1–A3: лес папок; пустые коллекции допустимы; кластеры не разделяются.
+  C1: number уникален внутри Disk, но не обязательно между дисками.
+  C2: вложенность папок ациклична; parent — непосредственный родитель.
+  C3: папка, её содержимое и используемые кластеры находятся на одном диске.
+  C4: для каждого Cluster число indexOwner + число fileOwner <= 1.
+  C5: indexCluster хранит список, соответствующий subfolders и files.
+  A4–A5: методы чтения, content и порядок dataClusters введены для проверки сценариев.
+  ByteSequence: упорядоченные байты, повторы и пустая последовательность допустимы.
+  A6: все четыре класса — Entity; отдельные агрегаты не выделяются.
+  Все кратности определены с учётом A1–A3; неизвестных в этом варианте нет.
+endlegend
+@enduml

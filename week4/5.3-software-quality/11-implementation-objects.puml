@@ -1,0 +1,69 @@
+@startuml
+' Задача 5.3, рисунок 15: схема оценки на этапе реализации.
+!pragma layout smetana
+skinparam defaultFontName DejaVu Sans
+skinparam shadowing false
+skinparam linetype ortho
+skinparam object {
+  BackgroundColor #F8FAFC
+  BorderColor #475569
+  FontColor #0F172A
+}
+skinparam ArrowColor #64748B
+skinparam nodesep 75
+skinparam ranksep 80
+hide empty members
+
+title Схема оценки качества ПС: этап реализации (рис. 15)
+
+object "stageImplementation : ЭтапРазработки" as stageImplementation {
+  name = "Реализация"
+}
+object "reliability : Фактор" as reliability {
+  name = "Надёжность ПС"
+}
+object "factorImplementation : ОписаниеФактораНаЭтапе" as factorImplementation
+object "stability : Критерий" as stability {
+  name = "Устойчивость функционирования"
+}
+object "ability : Критерий" as ability {
+  name = "Работоспособность"
+}
+object "stabilityImplementation : НастройкаКритерияНаЭтапе" as stabilityImplementation
+object "abilityImplementation : НастройкаКритерияНаЭтапе" as abilityImplementation
+object "m1 : Метрика" as m1 {
+  name = "Средства восстановления при ошибках на входе"
+}
+object "m2 : Метрика" as m2 {
+  name = "Средства восстановления при сбоях оборудования"
+}
+object "m3 : Метрика" as m3 {
+  name = "Реализация управления средствами восстановления"
+}
+object "m4 : Метрика" as m4 {
+  name = "Функционирование в заданных режимах"
+}
+object "m5 : Метрика" as m5 {
+  name = "Обеспечение обработки заданного объёма информации"
+}
+
+stageImplementation "этап (stage)" -- "описания факторов (factorDescriptions)" factorImplementation
+reliability "фактор (factor)" -- "описания (descriptions)" factorImplementation
+stageImplementation "этап (stage)" -- "настройки критериев (criterionSettings)" stabilityImplementation
+stageImplementation "этап (stage)" -- "настройки критериев (criterionSettings)" abilityImplementation
+stability "критерий (criterion)" -- "настройки (settings)" stabilityImplementation
+ability "критерий (criterion)" -- "настройки (settings)" abilityImplementation
+factorImplementation "описания факторов (factorDescriptions)" -- "настройки критериев (criterionSettings)" stabilityImplementation
+factorImplementation "описания факторов (factorDescriptions)" -- "настройки критериев (criterionSettings)" abilityImplementation
+stabilityImplementation "использования (usages)" -- "метрики (metrics)" m1
+stabilityImplementation "использования (usages)" -- "метрики (metrics)" m2
+stabilityImplementation "использования (usages)" -- "метрики (metrics)" m3
+abilityImplementation "использования (usages)" -- "метрики (metrics)" m4
+abilityImplementation "использования (usages)" -- "метрики (metrics)" m5
+
+legend bottom
+  reliability, stability, m1 и m2 — те же каталожные объекты, что на рис. 14.
+  Для этапа реализации созданы отдельные описания и настройки.
+  Значения результатов измерений в условии не заданы.
+endlegend
+@enduml

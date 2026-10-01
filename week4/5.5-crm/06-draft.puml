@@ -1,0 +1,62 @@
+@startuml
+title CRM — черновая модель после этапа 6
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam backgroundColor white
+hide empty members
+
+class ClientCard {
+  -id: Identifier [1] {readOnly}
+  -requisites: String [1]
+  +ClientCard(requisites: String)
+  +updateRequisites(requisites: String): Void
+  +addNote(submittedAt: DateTime, messageText: String): Note
+  +recordDeal(): Deal
+}
+class Note {
+  -id: Identifier [1] {readOnly}
+  -submittedAt: DateTime [1]
+  -messageText: String [1]
+  -replyText: String [0..1]
+  +setReply(replyText: String): Void
+}
+class Deal {
+  -id: Identifier [1] {readOnly}
+}
+class SalesManager {
+  -id: Identifier [1] {readOnly}
+  +assignCard(card: ClientCard): Void
+  +assignHead(head: DepartmentHead): Void
+}
+class DepartmentHead {
+  -id: Identifier [1] {readOnly}
+  +getManagedCards(): Set<ClientCard>
+}
+class ReportService {
+  +prepareReport(head: DepartmentHead): String
+}
+
+DepartmentHead "1\nhead" -- "0..*\nmanagers" SalesManager : supervises
+SalesManager "1\nmanager" -- "2..*\nassignedCards" ClientCard : assignedTo
+ClientCard "1\ncard" -- "0..*\nnotes" Note : recordsNotes
+ClientCard "1\ncard" -- "0..*\ndeals" Deal : recordsDeals
+ReportService ..> DepartmentHead : selectsScope
+ReportService ..> ClientCard : readsCardData
+
+note bottom of ClientCard
+  P1: один менеджер карточки — предположение.
+  P2: одна карточка заявки/сделки — предположение.
+  R10: «несколько» трактуется как 2..*.
+  Жизненные циклы не заданы: обычные ассоциации.
+end note
+note bottom of ReportService
+  P4: отчёт по карточкам менеджеров руководителя.
+  Формат, показатели и хранение не заданы.
+end note
+legend bottom
+  P3: id обозначает идентичность, формат не задан.
+  P7: число менеджеров руководителя не установлено;
+  0..* не вводит обязательной минимальной численности.
+endlegend
+@enduml

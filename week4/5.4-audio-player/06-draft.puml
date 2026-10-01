@@ -1,0 +1,157 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 60
+hide empty members
+title 5.4. Аудиоплеер — черновик после этапа 6
+package "Клиент: экземпляр аудиоплеера" {
+  class "Аудиоплеер\nAudioPlayer" as AudioPlayer 
+  class "Пользовательский интерфейс\nUserInterface" as UserInterface  {
+    -pending: Map<RequestId, Future<Outcome>>
+    +submit(command: Command): Future<Outcome>
+    +onCompleted(requestId: RequestId, outcome: Outcome): void
+  }
+  class "Управляющий компонент\nPlayerController" as PlayerController  {
+    -queue: Queue<Command>
+    -busy: Bool
+    -playbackState: PlaybackState
+    -currentSource: URI [0..1]
+    -activeHandle: MediaHandle [0..1]
+    +enqueue(command: Command): Future<Outcome>
+    -processNext(): void
+    ~play(source: URI): Outcome
+    ~pause(): Outcome
+    ~stop(): Outcome
+  }
+  class "Библиотека мультимедиа\nMediaLibrary" as MediaLibrary  {
+    -handles: Set<MediaHandle>
+    +open(source: URI): MediaHandle
+    +play(handle: MediaHandle): void
+    +pause(handle: MediaHandle): void
+    +close(handle: MediaHandle): void
+  }
+  class "Менеджер модулей\nPluginManager" as PluginManager  {
+    -installed: Map<PluginId, Plugin>
+    +find(id: PluginId): Plugin [0..1]
+    ~load(id: PluginId): Outcome
+    ~enable(id: PluginId): Outcome
+    ~disable(id: PluginId): Outcome
+    +installedVersions(): Map<PluginId, Version>
+    ~checkUpdates(): Future<Outcome>
+  }
+  class "Установленный модуль\nPlugin" as Plugin  {
+    -moduleId: PluginId
+    -installedVersion: Version
+    -packagePath: Path
+    -state: PluginState
+    ~load(ui: UserInterface, controller: PlayerController, media: MediaLibrary): Outcome
+    ~enable(): Outcome
+    ~disable(): Outcome
+    +onEvent(event: Event): void
+  }
+  class "Менеджер соединений\nConnectionManager" as ConnectionManager  {
+    -serverUri: URI
+    -state: ConnectionState
+    -timeout: Duration
+    +connect(): Future<void>
+    +requestUpdates(versions: Map<PluginId, Version>): Future<List<PluginDescriptor>>
+    +disconnect(): void
+  }
+}
+package "Значения и типы протокола" {
+  class "Команда\nCommand" as Command  {
+    -requestId: RequestId {readOnly}
+    -kind: CommandKind {readOnly}
+    -pluginId: PluginId [0..1] {readOnly}
+    -source: URI [0..1] {readOnly}
+    +validate(): Bool
+  }
+  class "Описание доступной версии\nPluginDescriptor" as PluginDescriptor  {
+    -moduleId: PluginId {readOnly}
+    -version: Version {readOnly}
+    -downloadUri: URI {readOnly}
+    +isNewerThan(installedVersion: Version): Bool
+  }
+  enum PluginState {
+    INSTALLED
+    LOADED
+    ENABLED
+  }
+  enum CommandKind {
+    PLAY
+    PAUSE
+    STOP
+    LOAD_PLUGIN
+    ENABLE_PLUGIN
+    DISABLE_PLUGIN
+    CHECK_UPDATES
+  }
+  enum PlaybackState {
+    STOPPED
+    PLAYING
+    PAUSED
+  }
+  enum ConnectionState {
+    DISCONNECTED
+    CONNECTING
+    CONNECTED
+  }
+}
+package "Серверная часть системы" {
+  class "Сервер модулей\nPluginServer" as PluginServer  {
+    +checkUpdates(versions: Map<PluginId, Version>): List<PluginDescriptor>
+  }
+  class "База доступных модулей\nModuleCatalog" as ModuleCatalog  {
+    -releases: Set<PluginDescriptor>
+    +versions(id: PluginId): List<PluginDescriptor>
+    +findUpdates(installed: Map<PluginId, Version>): List<PluginDescriptor>
+  }
+}
+
+' L1-L5: composition justified by A1, not by wording alone.
+AudioPlayer "1\nplayer" *-- "1\nui" UserInterface : владеет UI
+AudioPlayer "1\nplayer" *-- "1\ncontroller" PlayerController : владеет контроллером
+AudioPlayer "1\nplayer" *-- "1\npluginManager" PluginManager : владеет менеджером модулей
+AudioPlayer "1\nplayer" *-- "1\nmediaLibrary" MediaLibrary : владеет библиотекой
+AudioPlayer "1\nplayer" *-- "1\nconnections" ConnectionManager : владеет менеджером соединений
+' L6-L13: client structure.
+UserInterface "1\ninput" --> "1\ncontroller" PlayerController : передаёт команды
+PlayerController "1\ncontroller" <--> "1\nplugins" PluginManager : координирует модули
+PlayerController "1\nplayback" --> "1\nmedia" MediaLibrary : воспроизводит аудио через
+PluginManager "1\nmanager" --> "0..*\ninstalled" Plugin : учитывает установленные
+PluginManager "1\nrequester" --> "1\nconnections" ConnectionManager : запрашивает обновления через
+PluginManager "1\nprovider" --> "1\nui" UserInterface : передаёт модулям UI
+PluginManager "1\nprovider" --> "1\nmedia" MediaLibrary : передаёт модулям библиотеку
+PlayerController "0..1\nexecutor" --> "0..*\ncommands" Command : ожидает или исполняет
+' L14-L16: optional runtime references, all within the same player.
+Plugin "0..*\nextensions" --> "0..1\nui" UserInterface : использует UI
+Plugin "0..*\nextensions" --> "0..1\ncontroller" PlayerController : использует управление
+Plugin "0..*\nextensions" --> "0..1\nmedia" MediaLibrary : использует мультимедиа
+' L17-L19: remote service and independent storage.
+ConnectionManager "0..*\nclients" --> "0..1\nserver" PluginServer : подключён к
+PluginServer "1\nservice" --> "1\ncatalog" ModuleCatalog : читает доступные версии
+ModuleCatalog "0..*\ncatalogs" --> "0..*\nreleases" PluginDescriptor : хранит описания
+' D1-D4: dependencies have roles but no multiplicities.
+UserInterface ..> Command : принимает значение\nconsumer / argument
+ConnectionManager ..> PluginDescriptor : возвращает сведения\ntransport / updateInfo
+PluginManager ..> PluginDescriptor : передаёт результат проверки\ncoordinator / updateInfo
+PluginServer ..> PluginDescriptor : формирует ответ\nresponder / updateInfo
+
+legend bottom
+  R1-R10: требования; A1-A9: предположения из 00-source.md.
+  Число у конца B = число B для одного A; рядом указана роль B.
+  Стрелка ассоциации = навигация; пунктир = зависимость без кратности.
+  ~ = внутренний протокол; пользовательские команды проходят через enqueue.
+  Future/Outcome/коллекции и скаляры — типы интерфейса, не сущности.
+  Связи задают ссылочные свойства; installed/releases не дублируют поля.
+  Кратности определены при A1/A3/A5-A7; без них исходный текст их не устанавливает.
+  Пакеты показывают размещение и типы данных, а не агрегаты.
+endlegend
+@enduml

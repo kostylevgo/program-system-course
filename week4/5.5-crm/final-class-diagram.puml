@@ -1,0 +1,82 @@
+@startuml
+title CRM — итоговая модель предметной области
+left to right direction
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam backgroundColor white
+hide empty members
+
+class ClientCard <<Entity>> {
+  -id: Identifier [1] {readOnly}
+  -requisites: String [1]
+  +ClientCard(requisites: String)
+  +updateRequisites(requisites: String): Void
+  +addNote(submittedAt: DateTime, messageText: String): Note
+  +recordDeal(): Deal
+}
+class Note <<Entity>> {
+  -id: Identifier [1] {readOnly}
+  -submittedAt: DateTime [1]
+  -messageText: String [1]
+  -replyText: String [0..1]
+  +setReply(replyText: String): Void
+}
+class Deal <<Entity>> {
+  -id: Identifier [1] {readOnly}
+}
+class SalesManager <<Entity>> {
+  -id: Identifier [1] {readOnly}
+  +assignCard(card: ClientCard): Void
+  +assignHead(head: DepartmentHead): Void
+}
+class DepartmentHead <<Entity>> {
+  -id: Identifier [1] {readOnly}
+  +getManagedCards(): Set<ClientCard>
+}
+class ReportService <<Service>> {
+  +prepareReport(head: DepartmentHead): String
+}
+
+DepartmentHead "1\nhead" -- "0..*\nmanagers" SalesManager : supervises
+SalesManager "1\nmanager" -- "2..*\nassignedCards" ClientCard : assignedTo
+ClientCard "1\ncard" -- "0..*\nnotes" Note : recordsNotes
+ClientCard "1\ncard" -- "0..*\ndeals" Deal : recordsDeals
+ReportService ..> DepartmentHead : selectsScope
+ReportService ..> ClientCard : readsCardData
+ReportService ..> Note : readsNoteData
+ReportService ..> Deal : readsDealData
+
+note bottom of ClientCard
+  P1: один менеджер карточки — предположение;
+  исходная обратная кратность не установлена.
+  P2: у заявки/сделки одна карточка — предположение.
+  R10: «несколько» трактуется как 2..*.
+  Ограничения относятся к рабочему состоянию.
+  Связи — ассоциации; удаление частей не задано.
+end note
+note bottom of Note
+  R8: submittedAt и messageText обязательны.
+  R9: replyText может отсутствовать.
+end note
+note bottom of Deal
+  R7: учитывается отдельная проведённая сделка.
+  Поля и этапы проведения не определены.
+  Создаётся через ClientCard.recordDeal().
+  Связь с Note условием не задана.
+end note
+note bottom of ReportService
+  R4: подготовка отчёта; R5: актор — руководитель.
+  P4: читает карточки менеджеров руководителя,
+  возвращает текст, не изменяя источники.
+  Состав и форма отчёта требуют уточнения.
+end note
+legend bottom
+  Entity — сущность с идентичностью; Service — процесс без предметного состояния.
+  P3: id — проектное обозначение идентичности; формат не задан.
+  P6: реквизиты представлены String, дата и время — DateTime.
+  P7: минимум менеджеров руководителя не установлен, принято 0..*.
+  Роли и кратности указаны у концов ассоциаций; зависимости показаны пунктиром.
+  P1, P2 и P4 — проектные предположения, а не дополнительные требования задания.
+  Агрегаты не выделены. Client — актор; сведения о клиенте находятся в ClientCard.
+endlegend
+@enduml

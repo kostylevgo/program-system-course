@@ -1,0 +1,35 @@
+@startuml
+title Задача 5.1 — черновик этапа 6
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide empty methods
+
+class "Диск" as Disk
+class "Кластер" as Cluster {
+  number: Integer
+}
+class "Папка" as Folder {
+  name: String
+}
+class "Файл" as File {
+  name: String
+}
+
+Disk "1\ndisk" *-- "1..*\nclusters" Cluster : состоит из
+Disk "1\ndisk" -- "0..*\nfolders" Folder : размещает
+Folder "0..1\nparent" -- "0..*\nsubfolders" Folder : содержит подпапки
+Folder "1\nfolder" -- "0..*\nfiles" File : содержит файлы
+Folder "0..1\nindexOwner" -- "1\nindexCluster" Cluster : размещает список
+File "0..1\nfileOwner" -- "2..*\ndataClusters" Cluster : размещает данные
+
+legend bottom
+  R1–R4: структура из условия; «несколько» = 2..*.
+  A1–A3: лес папок; пустые коллекции допустимы; кластеры не разделяются.
+  C1: номера кластеров уникальны внутри диска.
+  C2–C3: вложенность ациклична; всё содержимое относится к одному диску.
+  C4: у кластера не более одного пользователя — папка либо файл.
+  C5: кластер списка отражает непосредственное содержимое папки.
+  Все кратности определены с учётом A1–A3; неизвестных в этом варианте нет.
+  Акторы и операции в условии не заданы; проверка чтения — этап 7.
+endlegend
+@enduml

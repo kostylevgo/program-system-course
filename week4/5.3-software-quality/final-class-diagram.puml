@@ -1,0 +1,77 @@
+@startuml
+title Задача 5.3 — схема качества с зависимостью от этапа
+!pragma layout smetana
+hide empty members
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam linetype ortho
+skinparam defaultFontName SansSerif
+skinparam classBackgroundColor #F5F9FD
+skinparam classBorderColor #335A7A
+top to bottom direction
+
+class "Фактор" as Factor <<Entity>> {
+  +name: String {readOnly}
+}
+class "Критерий" as Criterion <<Entity>> {
+  +name: String {readOnly}
+}
+class "Метрика" as Metric <<Entity>> {
+  +name: String {readOnly}
+}
+class "ЭтапРазработки" as DevelopmentStage <<Entity>> {
+  +name: String {readOnly}
+  +configureCriterion(criterion: Criterion, metrics: Set<Metric>): CriterionAtStage
+  +describeFactor(factor: Factor, settings: Set<CriterionAtStage>): FactorAtStage
+  +factors(): Set<FactorAtStage>
+}
+class "ОписаниеФактораНаЭтапе" as FactorAtStage <<Entity>> {
+  +setCriteria(settings: Set<CriterionAtStage>): void
+  +criteria(): Set<Criterion>
+}
+class "НастройкаКритерияНаЭтапе" as CriterionAtStage <<Entity>> {
+  +setMetrics(metrics: Set<Metric>): void
+  +metrics(): Set<Metric>
+}
+
+Factor "factor\n1" -- "descriptions\n0..*" FactorAtStage : описывается
+DevelopmentStage "stage\n1" -- "factorDescriptions\n0..*" FactorAtStage : задаёт контекст описания
+Criterion "criterion\n1" -- "settings\n0..*" CriterionAtStage : настраивается
+DevelopmentStage "stage\n1" -- "criterionSettings\n0..*" CriterionAtStage : задаёт контекст настройки
+FactorAtStage "factorDescriptions\n0..*" -- "criterionSettings\n1..*" CriterionAtStage : включает
+CriterionAtStage "usages\n0..*" -- "metrics\n2..*" Metric : использует
+
+note bottom of FactorAtStage
+  C1: unique(factor, stage).
+  C3: для каждой criterionSettings:
+  setting.stage = this.stage.
+  C5: factor и stage неизменяемы;
+  setCriteria заменяет только набор.
+end note
+note bottom of CriterionAtStage
+  C2: unique(criterion, stage).
+  C4: metrics — множество (не менее 2).
+  C5: criterion и stage неизменяемы;
+  setMetrics заменяет только набор.
+end note
+note top of DevelopmentStage
+  describeFactor и configureCriterion создают
+  либо обновляют единственный объект пары.
+  Изменения атомарны; ошибки не меняют состояние.
+  C6: в готовой схеме описана каждая пара
+  рассматриваемых фактора и этапа.
+end note
+note bottom of Metric
+  C7: одна метрика доступна разным критериям
+  и этапам; общей метрике соответствует один объект.
+  Это определение, а не результат измерения.
+end note
+legend left
+  Все связи — ассоциации; все многозначные роли — множества (C4).
+  Роли связей являются состоянием объектов, отдельные поля не дублируются.
+  Критерии описания получаются через criterionSettings.criterion.
+  1..* критериев и 2..* метрик: D2. Обратные 0..*: D6.
+  Операции — проектное дополнение D1; идентичность Entity — D4.
+  Границы агрегатов не вводятся (этап 9).
+endlegend
+@enduml

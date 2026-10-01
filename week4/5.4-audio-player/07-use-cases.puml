@@ -1,0 +1,33 @@
+@startuml
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName SansSerif
+skinparam defaultFontSize 14
+actor "Пользователь" as User
+rectangle "Система аудиоплеера: клиент + сервер с базой" {
+  usecase "UC1. Воспроизвести аудио" as Play
+  usecase "UC2. Приостановить воспроизведение" as Pause
+  usecase "UC3. Остановить воспроизведение" as Stop
+  usecase "UC4. Загрузить установленный модуль" as Load
+  usecase "UC5. Включить модуль" as Enable
+  usecase "UC6. Выключить модуль" as Disable
+  usecase "UC7. Проверить обновления\nустановленных модулей" as Updates
+}
+User --> Play
+User --> Pause
+User --> Stop
+User --> Load
+User --> Enable
+User --> Disable
+User --> Updates
+note bottom of Updates
+  Менеджер соединений, сервер и база находятся внутри системы.
+  Поэтому сервер не показан внешним актором.
+  Сетевое подключение — шаг UC7, не отдельная цель пользователя.
+end note
+note bottom of User
+  UI принимает команды асинхронно во всех сценариях (R7).
+  UC1-UC3 конкретизируют R3 по предположению A9.
+  Автопроверка по расписанию не задана.
+end note
+@enduml

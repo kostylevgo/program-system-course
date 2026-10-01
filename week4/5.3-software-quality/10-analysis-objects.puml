@@ -1,0 +1,49 @@
+@startuml
+' Задача 5.3, рисунок 14: схема оценки на этапе анализа.
+!pragma layout smetana
+skinparam defaultFontName DejaVu Sans
+skinparam shadowing false
+skinparam linetype ortho
+skinparam object {
+  BackgroundColor #F8FAFC
+  BorderColor #475569
+  FontColor #0F172A
+}
+skinparam ArrowColor #64748B
+skinparam nodesep 75
+skinparam ranksep 80
+hide empty members
+
+title Схема оценки качества ПС: этап анализа (рис. 14)
+
+object "stageAnalysis : ЭтапРазработки" as stageAnalysis {
+  name = "Анализ"
+}
+object "reliability : Фактор" as reliability {
+  name = "Надёжность ПС"
+}
+object "factorAnalysis : ОписаниеФактораНаЭтапе" as factorAnalysis
+object "stability : Критерий" as stability {
+  name = "Устойчивость функционирования"
+}
+object "stabilityAnalysis : НастройкаКритерияНаЭтапе" as stabilityAnalysis
+object "m1 : Метрика" as m1 {
+  name = "Средства восстановления при ошибках на входе"
+}
+object "m2 : Метрика" as m2 {
+  name = "Средства восстановления при сбоях оборудования"
+}
+
+stageAnalysis "этап (stage)" -- "описания факторов (factorDescriptions)" factorAnalysis
+reliability "фактор (factor)" -- "описания (descriptions)" factorAnalysis
+stageAnalysis "этап (stage)" -- "настройки критериев (criterionSettings)" stabilityAnalysis
+stability "критерий (criterion)" -- "настройки (settings)" stabilityAnalysis
+factorAnalysis "описания факторов (factorDescriptions)" -- "настройки критериев (criterionSettings)" stabilityAnalysis
+stabilityAnalysis "использования (usages)" -- "метрики (metrics)" m1
+stabilityAnalysis "использования (usages)" -- "метрики (metrics)" m2
+
+legend bottom
+  Объекты и связи задают схему оценки качества на этапе анализа.
+  Значения результатов измерений в условии не заданы.
+endlegend
+@enduml
